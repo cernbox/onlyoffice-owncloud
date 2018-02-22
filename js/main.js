@@ -140,6 +140,10 @@
                     var mimes = OCA.Onlyoffice.setting.formats;
 
                     OCA.Onlyoffice.mimes = mimes;
+		    if(localStorage.getItem('office_engine') !== 'onlyoffice') {
+			return;
+		    }
+
                     $.each(mimes, function (ext, attr) {
                         fileList.fileActions.registerAction({
                             name: "onlyofficeOpen",
@@ -207,5 +211,7 @@
     };
 })(OCA);
 
-OC.Plugins.register("OCA.Files.FileList", OCA.Onlyoffice.FileList);
-OC.Plugins.register("OCA.Files.NewFileMenu", OCA.Onlyoffice.NewFileMenu);
+if(localStorage.getItem('office_engine') === 'onlyoffice') {
+	OC.Plugins.register("OCA.Files.NewFileMenu", OCA.Onlyoffice.NewFileMenu);
+	OC.Plugins.register("OCA.Files.FileList", OCA.Onlyoffice.FileList);
+}
