@@ -91,6 +91,9 @@
     OCA.Onlyoffice.FileClick = function (fileName, context, attr) {
         var fileInfoModel = context.fileInfoModel || context.fileList.getModelForFile(fileName);
         var fileList = context.fileList;
+	var parts =  fileInfoModel.attributes.etag.split(":");
+	fileInfoModel.id = parts[0];
+	fileInfoModel.attributes.id =  parts[0];
         if (!attr.conv) {
             OCA.Onlyoffice.OpenEditor(fileInfoModel.id);
             return;
