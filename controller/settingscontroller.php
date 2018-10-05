@@ -251,7 +251,7 @@ class SettingsController extends Controller {
                 $fileUrl = str_replace($this->urlGenerator->getAbsoluteURL("/"), $this->config->GetStorageUrl(), $fileUrl);
             }
 
-            $documentService->GetConvertedUri($fileUrl, "docx", "docx", "check_" . rand());
+            #$documentService->GetConvertedUri($fileUrl, "docx", "docx", "check_" . rand());
 
         } catch (\Exception $e) {
             $this->logger->error("CommandRequest on check error: " . $e->getMessage(), array("app" => $this->appName));

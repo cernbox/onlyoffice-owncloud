@@ -69,10 +69,10 @@ class Application extends App {
                 }
             });
 
-        require_once __DIR__ . "/../3rdparty/jwt/BeforeValidException.php";
-        require_once __DIR__ . "/../3rdparty/jwt/ExpiredException.php";
-        require_once __DIR__ . "/../3rdparty/jwt/SignatureInvalidException.php";
-        require_once __DIR__ . "/../3rdparty/jwt/JWT.php";
+        require_once __DIR__ . "/../../cernboxauthtoken/vendor/firebase/php-jwt/src/BeforeValidException.php";
+        require_once __DIR__ . "/../../cernboxauthtoken/vendor/firebase/php-jwt/src/ExpiredException.php";
+        require_once __DIR__ . "/../../cernboxauthtoken/vendor/firebase/php-jwt/src/SignatureInvalidException.php";
+        require_once __DIR__ . "/../../cernboxauthtoken/vendor/firebase/php-jwt/src/JWT.php";
 
         $container = $this->getContainer();
 
