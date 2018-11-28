@@ -43,15 +43,17 @@
             return;
         }
 
-        if (typeof DocsAPI === "undefined" && !error.length) {
+        if (typeof DocsAPI === "undefined") {
             displayError(t(OCA.Onlyoffice.AppName, "ONLYOFFICE cannot be reached. Please contact admin"));
             return;
         }
 
         $.ajax({
-            url: OC.generateUrl("apps/onlyoffice/ajax/config/" + fileId),
+            url: OC.generateUrl("apps/onlyoffice/ajax/config" + fileId),
+	    error: function(data) {console.log(data);},
             success: function onSuccess(config) {
                 if (config) {
+		    console.log(config);
                     if (config.error != null) {
                         displayError(config.error);
                         return;

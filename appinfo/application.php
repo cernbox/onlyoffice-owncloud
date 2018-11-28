@@ -66,6 +66,8 @@ class Application extends App {
                 if (!empty($this->appConfig->GetDocumentServerUrl()) && $this->appConfig->SettingsAreSuccessful()) {
                     Util::addScript("onlyoffice", "main");
                     Util::addStyle("onlyoffice", "main");
+                    Util::addScript("onlyoffice", "editor");
+                    Util::addStyle("onlyoffice", "editor");
                 }
             });
 

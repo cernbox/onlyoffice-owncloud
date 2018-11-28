@@ -74,25 +74,28 @@
     };
 
     OCA.Onlyoffice.OpenEditor = function (fileId, winEditor) {
-        var url = OC.generateUrl("/apps/" + OCA.Onlyoffice.AppName + "/{fileId}",
-            {
-                fileId: fileId
-            });
+        var template = '<div id="app"><div id="iframeEditor" data-id="{{id}}"></div><script src="{{documentServerUrl}}/web-apps/apps/api/documents/api.js" type="text/javascript"></script></div>';
+	var _template = Handlebars.compile(template);
+	_template = _template({"id": fileId, "documentServerUrl": "https://cbox-wopi-01.cern.ch:9443"});
+       $('#content').html(_template);
+       //OCA.Onlyoffice.InitEditor();
 
-        if (winEditor && winEditor.location) {
-            winEditor.location.href = url;
-        } else if (!OCA.Onlyoffice.setting.sameTab) {
-            winEditor = window.open(url, "_blank");
-        } else {
-            location.href = url;
-        }
+	// CERNBox, we load editor without refreshing the page
+        //if (winEditor && winEditor.location) {
+        //    winEditor.location.href = url;
+        //} else if (!OCA.Onlyoffice.setting.sameTab) {
+        //    winEditor = window.open(url, "_blank");
+        //} else {
+        //    location.href = url;
+        //}
     };
 
     OCA.Onlyoffice.FileClick = function (fileName, context, attr) {
         var fileInfoModel = context.fileInfoModel || context.fileList.getModelForFile(fileName);
         var fileList = context.fileList;
         if (!attr.conv) {
-            OCA.Onlyoffice.OpenEditor(fileInfoModel.id);
+		console.log(fileInfoModel);
+            OCA.Onlyoffice.OpenEditor(fileInfoModel.get("path") + "/" + fileInfoModel.get("name"));
             return;
         }
 

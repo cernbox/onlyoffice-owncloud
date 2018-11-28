@@ -34,3 +34,12 @@ use OCP\App;
 App::registerAdmin("onlyoffice", "settings");
 
 $app = new Application();
+
+$domains = \OC::$server->getConfig()->getSystemValue("drawio.domains", ["cbox-wopi-01.cern.ch:9443", "cbox-wopi.cern.ch:9433"]);
+$policy = new \OCP\AppFramework\Http\EmptyContentSecurityPolicy();
+foreach($domains as $domain) {
+	$policy->addAllowedScriptDomain($domain);
+	$policy->addAllowedFrameDomain($domain);
+	$policy->addAllowedConnectDomain($domain);
+}
+\OC::$server->getContentSecurityPolicyManager()->addDefaultPolicy($policy);

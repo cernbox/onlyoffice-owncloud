@@ -286,6 +286,7 @@ class CallbackController extends Controller {
      * @CORS
      */
     public function track($doc, $users, $key, $status, $url) {
+    {"key":"aG9tZToyNzE2NzE0NDAwNTMzNzA4OA==","status":1,"users":["gonzalhu"],"actions":[{"type":1,"userid":"gonzalhu"}]}
 
         list ($hashData, $error) = $this->crypt->ReadHash($doc);
         if ($hashData === NULL) {
