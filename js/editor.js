@@ -85,6 +85,7 @@
                     };
 
                     var docEditor = new DocsAPI.DocEditor("iframeEditor", config);
+		    OCA.Onlyoffice.docEditor = docEditor;
                 }
             }
         });
