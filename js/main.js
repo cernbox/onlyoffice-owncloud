@@ -74,11 +74,11 @@
     };
 
     OCA.Onlyoffice.OpenEditor = function (fileId, winEditor) {
-        var template = '<div id="app"><div id="iframeEditor" data-id="{{id}}"></div><script src="{{documentServerUrl}}/web-apps/apps/api/documents/api.js" type="text/javascript"></script></div>';
+        var template = '<div id="app"><div id="iframeEditor" data-id="{{id}}"></div></div>';
 	var _template = Handlebars.compile(template);
 	_template = _template({"id": fileId, "documentServerUrl": "https://cbox-wopi-01.cern.ch:9443"});
        $('#content').html(_template);
-       //OCA.Onlyoffice.InitEditor();
+       OCA.Onlyoffice.InitEditor();
 
 	// CERNBox, we load editor without refreshing the page
         //if (winEditor && winEditor.location) {
@@ -210,5 +210,10 @@
     };
 })(OCA);
 
+// CERNBOX
+// add script at the page load
+var script = document.createElement('script');
+script.src = "https://cbox-wopi-01.cern.ch:9443/web-apps/apps/api/documents/api.js";
+document.head.appendChild(script);
 OC.Plugins.register("OCA.Files.FileList", OCA.Onlyoffice.FileList);
 OC.Plugins.register("OCA.Files.NewFileMenu", OCA.Onlyoffice.NewFileMenu);
