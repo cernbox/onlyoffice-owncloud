@@ -63,7 +63,8 @@
                 }
 
                 fileList.add(response, { animate: true });
-                OCA.Onlyoffice.OpenEditor(response.id, winEditor);
+		var fn = dir +"/" + response.name;
+                OCA.Onlyoffice.OpenEditor(fn, winEditor);
 
                 var row = OC.Notification.show(t(OCA.Onlyoffice.AppName, "File created"));
                 setTimeout(function () {
