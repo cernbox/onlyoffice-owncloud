@@ -77,7 +77,7 @@
     OCA.Onlyoffice.OpenEditor = function (fileId, winEditor) {
         var template = '<div id="app"><div id="iframeEditor" data-id="{{id}}"></div></div>';
 	var _template = Handlebars.compile(template);
-	_template = _template({"id": fileId, "documentServerUrl": "https://cbox-wopi-01.cern.ch:9443"});
+	_template = _template({"id": fileId, "documentServerUrl": OCA.Onlyoffice.documentServer});
        $('#content').html(_template);
        OCA.Onlyoffice.InitEditor();
 
@@ -154,6 +154,7 @@
                                 return OC.imagePath(OCA.Onlyoffice.AppName, "btn-edit");
                             },
                             actionHandler: function (fileName, context) {
+				// TODO(labkode): plug here window.confirm("Open with OnlyOffice?");
                                 OCA.Onlyoffice.FileClick(fileName, context, attr);
                             }
                         });
@@ -209,12 +210,77 @@
             });
         }
     };
+    
+    // return promise
+    OCA.Onlyoffice.loadConfig = function() {
+    	var url = OC.generateUrl('/apps/onlyoffice/config');
+	return $.get(url);
+    }
+
+    OCA.Onlyoffice.loadOnlyOfficeAPI = function() {
+		// CERNBOX
+		// add script at the page load
+		var script = document.createElement('script');
+		script.src = OCA.Onlyoffice.documentServer+"web-apps/apps/api/documents/api.js";
+		document.head.appendChild(script);
+    }
+
+
 })(OCA);
 
-// CERNBOX
-// add script at the page load
-var script = document.createElement('script');
-script.src = "https://cbox-wopi-01.cern.ch:9443/web-apps/apps/api/documents/api.js";
-document.head.appendChild(script);
-OC.Plugins.register("OCA.Files.FileList", OCA.Onlyoffice.FileList);
-OC.Plugins.register("OCA.Files.NewFileMenu", OCA.Onlyoffice.NewFileMenu);
+
+$(document).ready(function() {
+    var engine = localStorage.getItem("office-engine");
+    if (engine == "onlyoffice") {
+	    OC.Plugins.register("OCA.Files.FileList", OCA.Onlyoffice.FileList);
+	    OC.Plugins.register("OCA.Files.NewFileMenu", OCA.Onlyoffice.NewFileMenu);
+    }
+
+    var template =  `
+			</br>
+			<div class="file-settings-office">
+			<p>Chosse your Office platform</p>
+
+			<div>
+			  <input type="radio" id="microsoft" name="office" value="microsoft">
+			  <label for="microsoft">Office 365</label>
+			</div>
+
+			<div>
+			  <input type="radio" id="onlyoffice" name="office" value="onlyoffice">
+			  <label for="onlyoffice">OnlyOffice</label>
+			</div>
+			</div>
+	`;
+
+    OCA.Onlyoffice.loadConfig().success(function (response) {
+        OCA.Onlyoffice.documentServer = response.document_server;
+        if (engine == "onlyoffice") {
+	    	OCA.Onlyoffice.loadOnlyOfficeAPI();
+        }
+    }); 
+
+    $("#app-settings-content").append(template);
+
+    // magic to select engine
+    var stored = localStorage.getItem('office-engine');
+    if (!stored) {
+       alert('No Office engine preference found, default to OnlyOffice. Switching engines not yet ready!');
+       localStorage.setItem("office-engine", "onlyoffice");
+    }
+
+    $("#app-settings-content input[name='office']").filter('[value="' + stored + '"]').prop('checked', true);
+    $("#app-settings-content input[name='office']").change(function() {
+	if (this.value == "onlyoffice") {
+		localStorage.setItem("office-engine", "onlyoffice");
+		OC.Notification.showTemporary("Dry-run: Your collaborative office platform is set to OnlyOffice");
+		location.reload();
+	} else {
+		localStorage.setItem("office-engine", "microsoft");
+		OC.Notification.showTemporary("Dry-run: Your collaborative office platform is set to Office 365");
+		location.reload();
+	}
+    });
+
+
+});
