@@ -230,6 +230,13 @@
 
 
 $(document).ready(function() {
+    // magic to select engine
+    var stored = localStorage.getItem('office-engine');
+    if (!stored) {
+       console.log('No Office engine preference found, defaulting to onlyoffice');
+       localStorage.setItem("office-engine", "onlyoffice");
+    }
+
     var engine = localStorage.getItem("office-engine");
     if (engine == "onlyoffice") {
 	    OC.Plugins.register("OCA.Files.FileList", OCA.Onlyoffice.FileList);
@@ -262,23 +269,17 @@ $(document).ready(function() {
 
     $("#app-settings-content").append(template);
 
-    // magic to select engine
-    var stored = localStorage.getItem('office-engine');
-    if (!stored) {
-       alert('No Office engine preference found, default to OnlyOffice. Switching engines not yet ready!');
-       localStorage.setItem("office-engine", "onlyoffice");
-    }
 
     $("#app-settings-content input[name='office']").filter('[value="' + stored + '"]').prop('checked', true);
     $("#app-settings-content input[name='office']").change(function() {
 	if (this.value == "onlyoffice") {
 		localStorage.setItem("office-engine", "onlyoffice");
-		OC.Notification.showTemporary("Dry-run: Your collaborative office platform is set to OnlyOffice");
-		location.reload();
+		OC.Notification.showTemporary("Your collaborative office platform is set to OnlyOffice");
+		location.href = "/";
 	} else {
 		localStorage.setItem("office-engine", "microsoft");
-		OC.Notification.showTemporary("Dry-run: Your collaborative office platform is set to Office 365");
-		location.reload();
+		OC.Notification.showTemporary("Your collaborative office platform is set to Office 365");
+		location.href = "/";
 	}
     });
 
