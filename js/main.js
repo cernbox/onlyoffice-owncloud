@@ -246,7 +246,7 @@ $(document).ready(function() {
     var template =  `
 			</br>
 			<div class="file-settings-office">
-			<p>Chosse your Office platform</p>
+			<p>Choose your Office platform</p>
 
 			<div>
 			  <input type="radio" id="microsoft" name="office" value="microsoft">
