@@ -32,65 +32,107 @@
         };
     }
 
+    function onSuccess(config) {
+        if (config) {
+            console.log(config);
+            if (config.error != null) {
+                displayError(config.error);
+                return;
+            }
+
+            var docIsChanged = null;
+            var docIsChangedTimeout = null;
+
+            var setPageTitle = function(event) {
+                clearTimeout(docIsChangedTimeout);
+
+                if (docIsChanged !== event.data) {
+                    var titleChange = function () {
+                        window.document.title = config.document.title + (event.data ? " *" : "") + ' - ' + oc_defaults.title;
+                        docIsChanged = event.data;
+                    };
+
+                    if (event.data) {
+                        titleChange();
+                    } else {
+                        docIsChangedTimeout = setTimeout(titleChange, 500);
+                    }
+                }
+            };
+            setPageTitle(false);
+
+            config.events = {
+                "onDocumentStateChange": setPageTitle,
+            };
+
+            if (typeof DocsAPI === "undefined") {
+                displayError(t(OCA.Onlyoffice.AppName, "ONLYOFFICE cannot be reached. Please contact admin"));
+                return;
+            }
+
+            var docEditor = new DocsAPI.DocEditor("iframeEditor", config);
+            OCA.Onlyoffice.docEditor = docEditor;
+        }
+    }
+
     OCA.Onlyoffice.InitEditor = function () {
+
+        var iframe = $("#iframeEditor");
+
         var displayError = function (error) {
-            $("#iframeEditor").text(error).addClass("error");
+            iframe.text(error).addClass("error");
         };
 
-        var fileId = $("#iframeEditor").data("id");
-        if (!fileId) {
-            displayError(t(OCA.Onlyoffice.AppName, "FileId is empty"));
-            return;
-        }
 
-        if (typeof DocsAPI === "undefined") {
-            displayError(t(OCA.Onlyoffice.AppName, "ONLYOFFICE cannot be reached. Please contact admin"));
-            return;
-        }
+		if (isPublicPage()) {
 
-        $.ajax({
-            url: OC.generateUrl("apps/onlyoffice/ajax/config" + fileId),
-	    error: function(data) {console.log(data);},
-            success: function onSuccess(config) {
-                if (config) {
-		    console.log(config);
-                    if (config.error != null) {
-                        displayError(config.error);
-                        return;
-                    }
+            var filename = iframe.data("id") || "";
+            var token = getSharingToken();
+            var data = {};
 
-                    var docIsChanged = null;
-                    var docIsChangedTimeout = null;
+			data['token'] = token;
+			data['folderurl'] = parent.location.protocol+'//'+location.host+OC.generateUrl('/s/')+token+'?closed=1&path='+OC.dirname(filename);
+            data['filename'] = filename
 
-                    var setPageTitle = function(event) {
-                        clearTimeout(docIsChangedTimeout);
+            $.post(OC.generateUrl('apps/onlyoffice/ajax/configpublic'), data)
+                .success(onSuccess)
+                .error(function(data) {console.log(data)});
 
-                        if (docIsChanged !== event.data) {
-                            var titleChange = function () {
-                                window.document.title = config.document.title + (event.data ? " *" : "") + ' - ' + oc_defaults.title;
-                                docIsChanged = event.data;
-                            };
-
-                            if (event.data) {
-                                titleChange();
-                            } else {
-                                docIsChangedTimeout = setTimeout(titleChange, 500);
-                            }
-                        }
-                    };
-                    setPageTitle(false);
-
-                    config.events = {
-                        "onDocumentStateChange": setPageTitle,
-                    };
-
-                    var docEditor = new DocsAPI.DocEditor("iframeEditor", config);
-		    OCA.Onlyoffice.docEditor = docEditor;
-                }
+        } else {
+            var fileId = iframe.data("id");
+            if (!fileId) {
+                displayError(t(OCA.Onlyoffice.AppName, "FileId is empty"));
+                return;
             }
-        });
+    
+            $.ajax({
+                url: OC.generateUrl("apps/onlyoffice/ajax/config" + fileId),
+                error: function(data) {console.log(data);},
+                success: onSuccess
+            });
+
+        }
     };
 
     $(document).ready(OCA.Onlyoffice.InitEditor);
 
+    var isPublicPage = function () {
+
+		if ($("input#isPublic") && $("input#isPublic").val() === "1") {
+			return true;
+		} else {
+			return false;
+		}
+	};
+
+	var getSharingToken = function () {
+		if ($("input#sharingToken") && $("input#sharingToken").val()) {
+			return $("input#sharingToken").val();
+		} else {
+			return null;
+		}
+	};
+
 })(jQuery, OCA);
+
+

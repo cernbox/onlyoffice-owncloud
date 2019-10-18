@@ -34,6 +34,12 @@
 
     OCA.Onlyoffice.setting = {};
 
+
+	OCA.Onlyoffice.wordMime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+	OCA.Onlyoffice.excelMime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+	OCA.Onlyoffice.powertpointMime = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+
+
     OCA.Onlyoffice.CreateFile = function (name, fileList) {
         var dir = fileList.getCurrentDirectory();
 
@@ -225,6 +231,14 @@
 		document.head.appendChild(script);
     }
 
+    OCA.Onlyoffice.OpenSingleFileEditor = function (token) {
+        var template = '<div id="app"><div id="iframeEditor"></div></div>';
+        var _template = Handlebars.compile(template);
+        _template = _template({"documentServerUrl": OCA.Onlyoffice.documentServer});
+        $('#content').html(_template);
+        OCA.Onlyoffice.InitEditor();
+    };
+
 
 })(OCA);
 
@@ -263,7 +277,17 @@ $(document).ready(function() {
     OCA.Onlyoffice.loadConfig().success(function (response) {
         OCA.Onlyoffice.documentServer = response.document_server;
         if (engine == "onlyoffice") {
-	    	OCA.Onlyoffice.loadOnlyOfficeAPI();
+            OCA.Onlyoffice.loadOnlyOfficeAPI();
+
+            if ($('#isPublic').val() && getUrlParameter('closed') !== '1') {
+                var sharingToken = $('#sharingToken').val();
+                mime = $('#mimetype').val();
+
+                if (mime == OCA.Onlyoffice.wordMime || mime == OCA.Onlyoffice.excelMime || mime == OCA.Onlyoffice.powertpointMime) {
+                    OCA.Onlyoffice.OpenSingleFileEditor(sharingToken);
+                }
+            }
+            
         }
     }); 
 
@@ -282,6 +306,11 @@ $(document).ready(function() {
 		location.href = "/";
 	}
     });
+
+	var getUrlParameter = function (sParam) {
+        var urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(sParam)
+	};
 
 
 });
