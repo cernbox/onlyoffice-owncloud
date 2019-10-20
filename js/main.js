@@ -35,11 +35,6 @@
     OCA.Onlyoffice.setting = {};
 
 
-	OCA.Onlyoffice.wordMime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-	OCA.Onlyoffice.excelMime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-	OCA.Onlyoffice.powertpointMime = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-
-
     OCA.Onlyoffice.CreateFile = function (name, fileList) {
         var dir = fileList.getCurrentDirectory();
 
@@ -138,7 +133,7 @@
             });
     };
 
-    OCA.Onlyoffice.RegisterFileList = function() {
+    OCA.Onlyoffice.RegisterFileList = function(mimePl, mimeFoundFn) {
 
         $.get(OC.generateUrl("apps/" + OCA.Onlyoffice.AppName + "/ajax/settings"),
             function onSuccess(settings) {
@@ -147,6 +142,11 @@
 
                 OCA.Onlyoffice.mimes = mimes;
                 $.each(mimes, function (ext, attr) {
+
+                    if (mimePl !== undefined && mimePl === attr.mime && attr.edit && attr.def) {
+                        mimeFoundFn();
+                    }
+
                     OCA.Files.fileActions.registerAction({
                         name: "onlyofficeOpen",
                         displayName: t(OCA.Onlyoffice.AppName, "Open in ONLYOFFICE"),
@@ -249,6 +249,7 @@ $(document).ready(function() {
     if ($('#isPublic').val()) {
 
         if ($('#officeEngine').val() === "onlyoffice") {
+            
             OCA.Onlyoffice.loadConfig().success(function (response) {
                 OCA.Onlyoffice.documentServer = response.document_server;
                 OCA.Onlyoffice.loadOnlyOfficeAPI();
@@ -256,11 +257,12 @@ $(document).ready(function() {
                 if (getUrlParameter('closed') !== '1') {
                     var sharingToken = $('#sharingToken').val();
                     mime = $('#mimetype').val();
-    
-                    //TODO diogo: register all supported mimetypes... use the value that comes from the config (?)
-                    if (mime == OCA.Onlyoffice.wordMime || mime == OCA.Onlyoffice.excelMime || mime == OCA.Onlyoffice.powertpointMime) {
+
+                    OCA.Onlyoffice.RegisterFileList(mime, function() {
                         OCA.Onlyoffice.OpenSingleFileEditor(sharingToken);
-                    }
+                    });
+                } else {
+                    OCA.Onlyoffice.RegisterFileList();
                 }
             }); 
         }        

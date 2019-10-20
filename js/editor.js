@@ -86,17 +86,20 @@
 
 		if (isPublicPage()) {
 
-            var filename = iframe.data("id") || "";
-            var token = getSharingToken();
-            var data = {};
+            if ($('#officeEngine').val() === "onlyoffice") {
 
-			data['token'] = token;
-			data['folderurl'] = parent.location.protocol+'//'+location.host+OC.generateUrl('/s/')+token+'?closed=1&path='+OC.dirname(filename);
-            data['filename'] = filename
-
-            $.post(OC.generateUrl('apps/onlyoffice/ajax/configpublic'), data)
-                .success(onSuccess)
-                .error(function(data) {console.log(data)});
+                var filename = iframe.data("id") || "";
+                var token = getSharingToken();
+                var data = {};
+    
+                data['token'] = token;
+                data['folderurl'] = parent.location.protocol+'//'+location.host+OC.generateUrl('/s/')+token+'?closed=1&path='+OC.dirname(filename);
+                data['filename'] = filename
+    
+                $.post(OC.generateUrl('apps/onlyoffice/ajax/configpublic'), data)
+                    .success(onSuccess)
+                    .error(function(data) {console.log(data)});
+            }
 
         } else {
             var fileId = iframe.data("id");
