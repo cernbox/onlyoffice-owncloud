@@ -34,6 +34,7 @@
 
     OCA.Onlyoffice.setting = {};
 
+
     OCA.Onlyoffice.CreateFile = function (name, fileList) {
         var dir = fileList.getCurrentDirectory();
 
@@ -132,40 +133,40 @@
             });
     };
 
-    OCA.Onlyoffice.FileList = {
-        attach: function (fileList) {
-            if (fileList.id == "trashbin") {
-                return;
-            }
+    OCA.Onlyoffice.RegisterFileList = function(mimePl, mimeFoundFn) {
 
-            $.get(OC.generateUrl("apps/" + OCA.Onlyoffice.AppName + "/ajax/settings"),
-                function onSuccess(settings) {
-                    OCA.Onlyoffice.setting = settings;
-                    var mimes = OCA.Onlyoffice.setting.formats;
+        $.get(OC.generateUrl("apps/" + OCA.Onlyoffice.AppName + "/ajax/settings"),
+            function onSuccess(settings) {
+                OCA.Onlyoffice.setting = settings;
+                var mimes = OCA.Onlyoffice.setting.formats;
 
-                    OCA.Onlyoffice.mimes = mimes;
-                    $.each(mimes, function (ext, attr) {
-                        fileList.fileActions.registerAction({
-                            name: "onlyofficeOpen",
-                            displayName: t(OCA.Onlyoffice.AppName, "Open in ONLYOFFICE"),
-                            mime: attr.mime,
-                            permissions: OC.PERMISSION_READ,
-                            icon: function () {
-                                return OC.imagePath(OCA.Onlyoffice.AppName, "btn-edit");
-                            },
-                            actionHandler: function (fileName, context) {
-				// TODO(labkode): plug here window.confirm("Open with OnlyOffice?");
-                                OCA.Onlyoffice.FileClick(fileName, context, attr);
-                            }
-                        });
+                OCA.Onlyoffice.mimes = mimes;
+                $.each(mimes, function (ext, attr) {
 
-                        if (attr.def && !fileList.fileActions.getDefaultFileAction(attr.mime, "file", OC.PERMISSION_READ)) {
-                            fileList.fileActions.setDefault(attr.mime, "onlyofficeOpen");
+                    if (mimePl !== undefined && mimePl === attr.mime && attr.edit && attr.def) {
+                        mimeFoundFn();
+                    }
+
+                    OCA.Files.fileActions.registerAction({
+                        name: "onlyofficeOpen",
+                        displayName: t(OCA.Onlyoffice.AppName, "Open in ONLYOFFICE"),
+                        mime: attr.mime,
+                        permissions: OC.PERMISSION_READ,
+                        icon: function () {
+                            return OC.imagePath(OCA.Onlyoffice.AppName, "btn-edit");
+                        },
+                        actionHandler: function (fileName, context) {
+            // TODO(labkode): plug here window.confirm("Open with OnlyOffice?");
+                            OCA.Onlyoffice.FileClick(fileName, context, attr);
                         }
                     });
-                }
-            );
-        }
+
+                    if (attr.def && !OCA.Files.fileActions.getDefaultFileAction(attr.mime, "file", OC.PERMISSION_READ)) {
+                        OCA.Files.fileActions.setDefault(attr.mime, "onlyofficeOpen");
+                    }
+                });
+            }
+        );
     };
 
     OCA.Onlyoffice.NewFileMenu = {
@@ -225,63 +226,96 @@
 		document.head.appendChild(script);
     }
 
+    OCA.Onlyoffice.OpenSingleFileEditor = function (token) {
+        var template = '<div id="app"><div id="iframeEditor"></div></div>';
+        var _template = Handlebars.compile(template);
+        _template = _template({"documentServerUrl": OCA.Onlyoffice.documentServer});
+        $('#content').html(_template);
+        OCA.Onlyoffice.InitEditor();
+    };
+
 
 })(OCA);
 
 
 $(document).ready(function() {
-    // magic to select engine
-    var stored = localStorage.getItem('office-engine');
-    if (!stored) {
-       console.log('No Office engine preference found, defaulting to onlyoffice');
-       localStorage.setItem("office-engine", "onlyoffice");
+
+    var getUrlParameter = function (sParam) {
+        var urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(sParam)
+    };
+
+
+    if ($('#isPublic').val()) {
+
+        if ($('#officeEngine').val() === "onlyoffice") {
+            
+            OCA.Onlyoffice.loadConfig().success(function (response) {
+                OCA.Onlyoffice.documentServer = response.document_server;
+                OCA.Onlyoffice.loadOnlyOfficeAPI();
+    
+                if (getUrlParameter('closed') !== '1') {
+                    var sharingToken = $('#sharingToken').val();
+                    mime = $('#mimetype').val();
+
+                    OCA.Onlyoffice.RegisterFileList(mime, function() {
+                        OCA.Onlyoffice.OpenSingleFileEditor(sharingToken);
+                    });
+                } else {
+                    OCA.Onlyoffice.RegisterFileList();
+                }
+            }); 
+        }        
+
+    } else {
+
+        var template =  `
+            </br>
+            <div class="file-settings-office">
+            <p>Choose your Office platform</p>
+
+            <div>
+            <input type="radio" id="microsoft" name="office" value="microsoft">
+            <label for="microsoft">Office 365</label>
+            </div>
+
+            <div>
+            <input type="radio" id="onlyoffice" name="office" value="onlyoffice">
+            <label for="onlyoffice">OnlyOffice</label>
+            </div>
+            </div>`;
+
+
+        $("#app-settings-content").append(template);
+        $("#app-settings-content input[name='office']").change(function() {
+
+            var that = this;
+
+            $.post(OC.generateUrl('/apps/office'),
+                {
+                    engine: that.value
+                })
+                .done(function(){
+                    var engine = that.value == "onlyoffice" ? "OnlyOffice" : "Office 365";
+                    OC.Notification.showTemporary("Your collaborative office platform is set to " + engine);
+                    location.reload();
+                })
+                .fail(function() {
+                    OC.Notification.showTemporary("There was an error changing your office platform");
+                });
+        });
+        
+        $.getJSON(OC.generateUrl('/apps/office'), function(response) {
+            if (response.engine == "onlyoffice") {
+                OCA.Onlyoffice.RegisterFileList()
+                OC.Plugins.register("OCA.Files.NewFileMenu", OCA.Onlyoffice.NewFileMenu);
+                OCA.Onlyoffice.loadConfig().success(function (response) {
+                    OCA.Onlyoffice.documentServer = response.document_server;
+                    OCA.Onlyoffice.loadOnlyOfficeAPI();
+                }); 
+            }
+
+            $("#app-settings-content input[name='office']").filter('[value="' + response.engine + '"]').prop('checked', true);
+        });
     }
-
-    var engine = localStorage.getItem("office-engine");
-    if (engine == "onlyoffice") {
-	    OC.Plugins.register("OCA.Files.FileList", OCA.Onlyoffice.FileList);
-	    OC.Plugins.register("OCA.Files.NewFileMenu", OCA.Onlyoffice.NewFileMenu);
-    }
-
-    var template =  `
-			</br>
-			<div class="file-settings-office">
-			<p>Choose your Office platform</p>
-
-			<div>
-			  <input type="radio" id="microsoft" name="office" value="microsoft">
-			  <label for="microsoft">Office 365</label>
-			</div>
-
-			<div>
-			  <input type="radio" id="onlyoffice" name="office" value="onlyoffice">
-			  <label for="onlyoffice">OnlyOffice</label>
-			</div>
-			</div>
-	`;
-
-    OCA.Onlyoffice.loadConfig().success(function (response) {
-        OCA.Onlyoffice.documentServer = response.document_server;
-        if (engine == "onlyoffice") {
-	    	OCA.Onlyoffice.loadOnlyOfficeAPI();
-        }
-    }); 
-
-    $("#app-settings-content").append(template);
-
-
-    $("#app-settings-content input[name='office']").filter('[value="' + stored + '"]').prop('checked', true);
-    $("#app-settings-content input[name='office']").change(function() {
-	if (this.value == "onlyoffice") {
-		localStorage.setItem("office-engine", "onlyoffice");
-		OC.Notification.showTemporary("Your collaborative office platform is set to OnlyOffice");
-		location.href = "/";
-	} else {
-		localStorage.setItem("office-engine", "microsoft");
-		OC.Notification.showTemporary("Your collaborative office platform is set to Office 365");
-		location.href = "/";
-	}
-    });
-
-
 });
