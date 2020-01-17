@@ -267,7 +267,7 @@ $(document).ready(function() {
             }); 
         }        
 
-    } else {
+    } else if (!$('#body-login').length) { // don't show office in the login page (including public links with password)
 
         var template =  `
             </br>
