@@ -248,74 +248,31 @@ $(document).ready(function() {
 
     if ($('#isPublic').val()) {
 
-        if ($('#officeEngine').val() === "onlyoffice") {
+        // !! Only use OnlyOffice in public links !! 
             
-            OCA.Onlyoffice.loadConfig().success(function (response) {
-                OCA.Onlyoffice.documentServer = response.document_server;
-                OCA.Onlyoffice.loadOnlyOfficeAPI();
-    
-                if (getUrlParameter('closed') !== '1') {
-                    var sharingToken = $('#sharingToken').val();
-                    mime = $('#mimetype').val();
+        OCA.Onlyoffice.loadConfig().success(function (response) {
+            OCA.Onlyoffice.documentServer = response.document_server;
+            OCA.Onlyoffice.loadOnlyOfficeAPI();
 
-                    OCA.Onlyoffice.RegisterFileList(mime, function() {
-                        OCA.Onlyoffice.OpenSingleFileEditor(sharingToken);
-                    });
-                } else {
-                    OCA.Onlyoffice.RegisterFileList();
-                }
-            }); 
-        }        
+            if (getUrlParameter('closed') !== '1') {
+                var sharingToken = $('#sharingToken').val();
+                mime = $('#mimetype').val();
+
+                OCA.Onlyoffice.RegisterFileList(mime, function() {
+                    OCA.Onlyoffice.OpenSingleFileEditor(sharingToken);
+                });
+            } else {
+                OCA.Onlyoffice.RegisterFileList();
+            }
+        }); 
 
     } else if (!$('#body-login').length) { // don't show office in the login page (including public links with password)
-
-        var template =  `
-            </br>
-            <div class="file-settings-office">
-            <p>Choose your Office platform</p>
-
-            <div>
-            <input type="radio" id="microsoft" name="office" value="microsoft">
-            <label for="microsoft">Office 365</label>
-            </div>
-
-            <div>
-            <input type="radio" id="onlyoffice" name="office" value="onlyoffice">
-            <label for="onlyoffice">OnlyOffice</label>
-            </div>
-            </div>`;
-
-
-        $("#app-settings-content").append(template);
-        $("#app-settings-content input[name='office']").change(function() {
-
-            var that = this;
-
-            $.post(OC.generateUrl('/apps/office'),
-                {
-                    engine: that.value
-                })
-                .done(function(){
-                    var engine = that.value == "onlyoffice" ? "OnlyOffice" : "Office 365";
-                    OC.Notification.showTemporary("Your collaborative office platform is set to " + engine);
-                    location.reload();
-                })
-                .fail(function() {
-                    OC.Notification.showTemporary("There was an error changing your office platform");
-                });
-        });
-        
-        $.getJSON(OC.generateUrl('/apps/office'), function(response) {
-            if (response.engine == "onlyoffice") {
-                OCA.Onlyoffice.RegisterFileList()
-                OC.Plugins.register("OCA.Files.NewFileMenu", OCA.Onlyoffice.NewFileMenu);
-                OCA.Onlyoffice.loadConfig().success(function (response) {
-                    OCA.Onlyoffice.documentServer = response.document_server;
-                    OCA.Onlyoffice.loadOnlyOfficeAPI();
-                }); 
-            }
-
-            $("#app-settings-content input[name='office']").filter('[value="' + response.engine + '"]').prop('checked', true);
-        });
+    
+        OCA.Onlyoffice.RegisterFileList()
+        OC.Plugins.register("OCA.Files.NewFileMenu", OCA.Onlyoffice.NewFileMenu); // Create files by default using OO
+        OCA.Onlyoffice.loadConfig().success(function (response) {
+            OCA.Onlyoffice.documentServer = response.document_server;
+            OCA.Onlyoffice.loadOnlyOfficeAPI();
+        }); 
     }
 });
