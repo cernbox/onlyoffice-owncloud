@@ -248,74 +248,83 @@ $(document).ready(function() {
 
     if ($('#isPublic').val()) {
 
-        if ($('#officeEngine').val() === "onlyoffice") {
+        // !! Only use OnlyOffice in public links !! 
             
-            OCA.Onlyoffice.loadConfig().success(function (response) {
-                OCA.Onlyoffice.documentServer = response.document_server;
-                OCA.Onlyoffice.loadOnlyOfficeAPI();
-    
-                if (getUrlParameter('closed') !== '1') {
-                    var sharingToken = $('#sharingToken').val();
-                    mime = $('#mimetype').val();
+        OCA.Onlyoffice.loadConfig().success(function (response) {
+            OCA.Onlyoffice.documentServer = response.document_server;
+            OCA.Onlyoffice.loadOnlyOfficeAPI();
 
-                    OCA.Onlyoffice.RegisterFileList(mime, function() {
-                        OCA.Onlyoffice.OpenSingleFileEditor(sharingToken);
-                    });
-                } else {
-                    OCA.Onlyoffice.RegisterFileList();
-                }
-            }); 
-        }        
+            if (getUrlParameter('closed') !== '1') {
+                var sharingToken = $('#sharingToken').val();
+                mime = $('#mimetype').val();
+
+                OCA.Onlyoffice.RegisterFileList(mime, function() {
+                    OCA.Onlyoffice.OpenSingleFileEditor(sharingToken);
+                });
+            } else {
+                OCA.Onlyoffice.RegisterFileList();
+            }
+        }); 
 
     } else if (!$('#body-login').length) { // don't show office in the login page (including public links with password)
+    
+        OCA.Onlyoffice.RegisterFileList()
+        OC.Plugins.register("OCA.Files.NewFileMenu", OCA.Onlyoffice.NewFileMenu); // Create files by default using OO
+        OCA.Onlyoffice.loadConfig().success(function (response) {
+            OCA.Onlyoffice.documentServer = response.document_server;
+            OCA.Onlyoffice.loadOnlyOfficeAPI();
+        }); 
 
-        var template =  `
-            </br>
-            <div class="file-settings-office">
-            <p>Choose your Office platform</p>
-
-            <div>
-            <input type="radio" id="microsoft" name="office" value="microsoft">
-            <label for="microsoft">Office 365</label>
-            </div>
-
-            <div>
-            <input type="radio" id="onlyoffice" name="office" value="onlyoffice">
-            <label for="onlyoffice">OnlyOffice</label>
-            </div>
-            </div>`;
-
-
-        $("#app-settings-content").append(template);
-        $("#app-settings-content input[name='office']").change(function() {
-
-            var that = this;
-
-            $.post(OC.generateUrl('/apps/office'),
-                {
-                    engine: that.value
-                })
-                .done(function(){
-                    var engine = that.value == "onlyoffice" ? "OnlyOffice" : "Office 365";
-                    OC.Notification.showTemporary("Your collaborative office platform is set to " + engine);
-                    location.reload();
-                })
-                .fail(function() {
-                    OC.Notification.showTemporary("There was an error changing your office platform");
-                });
-        });
-        
+        // Show pop up with info
+        var current_office = "onlyoffice";
         $.getJSON(OC.generateUrl('/apps/office'), function(response) {
-            if (response.engine == "onlyoffice") {
-                OCA.Onlyoffice.RegisterFileList()
-                OC.Plugins.register("OCA.Files.NewFileMenu", OCA.Onlyoffice.NewFileMenu);
-                OCA.Onlyoffice.loadConfig().success(function (response) {
-                    OCA.Onlyoffice.documentServer = response.document_server;
-                    OCA.Onlyoffice.loadOnlyOfficeAPI();
-                }); 
-            }
+            if (response.engine != current_office) {
 
-            $("#app-settings-content input[name='office']").filter('[value="' + response.engine + '"]').prop('checked', true);
-        });
-    }
-});
+                var img_url = OC.imagePath(OCA.Onlyoffice.AppName, 'onlyoffice_logo.png');
+
+                $("body").append('<div id="dialog_office">\
+                    <h2>OnlyOffice is the new default office editor!</h2>\
+                    <div style="background: #2b5880;border-radius: 5px 5px 0 0;height: 60px;margin-top: 21px;display: flex;">\
+                        <img src="' + img_url + '" style="max-height:50px;margin: auto;text-align: center;">\
+                    </div>\
+                    <div style="border-radius: 0 0 5px 5px;padding:15px;border:1px solid #ccc;border-top: 0;text-align:left;">\
+                        <ul>\
+                            <li>• Compatibility with Microsoft Office documents</li>\
+                            <li>• Concurrent editing by multiple people</li>\
+                            <li>• Complete set of formatting tools</li>\
+                        </ul>\
+                    </div>\
+                </div>');
+
+                $( "#dialog_office" ).dialog({
+                    resizable: false,
+                    height: "auto",
+                    width: 500,
+                    modal: true
+                    })
+                    .on('dialogclose', function(event) {
+                        $.post(OC.generateUrl('/apps/office'), {engine: current_office});
+                    })
+                    .css("padding", "20px");
+
+
+                $(".ui-widget-overlay.ui-front").css("background", "rgba(0,0,0, 0.65)").css("z-index", "10000");
+                var box_shadow = "0px 0px 45px 0 rgba(0,0,0,0.2)";
+                $(".ui-dialog")
+                    .css("z-index", "10001")
+                    .css("background", "white")
+                    .css("border", "0")
+                    .css("text-align", "center")
+                    .css("box-shadow", box_shadow)
+                    .css("-webkit-box-shadow", box_shadow)
+                    .css("-moz-box-shadow", box_shadow);;
+                $(".ui-dialog-titlebar")
+                    .css("background", "none")
+                    .css("border", "0")
+                    .css("position", "absolute")
+                    .css("right", "3px")
+                    .css("z-index", "1");
+                }
+            });
+        }
+    });
