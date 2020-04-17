@@ -294,6 +294,9 @@ $(document).ready(function() {
                             <li>• Complete set of formatting tools</li>\
                         </ul>\
                     </div>\
+                    <p style="margin-top: 9px; font-size: 0.85em; text-align: left; margin-left: 10px;">\
+                        <a href="https://cernbox.cern.ch" style="" target="_blank">Access to MS Office Online is still possible (KB000000)</a>\
+                    </p>\
                 </div>');
 
                 $( "#dialog_office" ).dialog({
