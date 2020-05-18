@@ -129,6 +129,18 @@
                         setTimeout(function () {
                             OC.Notification.hide(row);
                         }, 3000);
+                    })
+                    .fail(function(status) {
+                        if (status === 412) {
+                            OC.Notification.show(t('files', 'Could not create file "{file}" because it already exists',
+                                {file: name}), {type: 'error'}
+                            );
+                        } else {
+                            OC.Notification.show(t('files', 'Could not create file "{file}"',
+                                {file: name}), {type: 'error'}
+                            );
+                        }
+                        deferred.reject(status);
                     });
             });
     };
@@ -180,33 +192,33 @@
             menu.addMenuEntry({
                 id: "onlyofficeDocx",
                 displayName: t(OCA.Onlyoffice.AppName, "Document"),
-                templateName: t(OCA.Onlyoffice.AppName, "Document"),
+                templateName: t(OCA.Onlyoffice.AppName, "Document.docx"),
                 iconClass: "icon-onlyoffice-new-docx",
                 fileType: "docx",
                 actionHandler: function (name) {
-                    OCA.Onlyoffice.CreateFile(name + ".docx", fileList);
+                    OCA.Onlyoffice.CreateFile(name, fileList);
                 }
             });
 
             menu.addMenuEntry({
                 id: "onlyofficeXlsx",
                 displayName: t(OCA.Onlyoffice.AppName, "Spreadsheet"),
-                templateName: t(OCA.Onlyoffice.AppName, "Spreadsheet"),
+                templateName: t(OCA.Onlyoffice.AppName, "Spreadsheet.xlsx"),
                 iconClass: "icon-onlyoffice-new-xlsx",
                 fileType: "xlsx",
                 actionHandler: function (name) {
-                    OCA.Onlyoffice.CreateFile(name + ".xlsx", fileList);
+                    OCA.Onlyoffice.CreateFile(name, fileList);
                 }
             });
 
             menu.addMenuEntry({
                 id: "onlyofficePpts",
                 displayName: t(OCA.Onlyoffice.AppName, "Presentation"),
-                templateName: t(OCA.Onlyoffice.AppName, "Presentation"),
+                templateName: t(OCA.Onlyoffice.AppName, "Presentation.pptx"),
                 iconClass: "icon-onlyoffice-new-pptx",
                 fileType: "pptx",
                 actionHandler: function (name) {
-                    OCA.Onlyoffice.CreateFile(name + ".pptx", fileList);
+                    OCA.Onlyoffice.CreateFile(name, fileList);
                 }
             });
         }
