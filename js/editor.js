@@ -36,7 +36,8 @@
         if (config) {
             console.log(config);
             if (config.error != null) {
-                displayError(config.error);
+                
+				OC.Notification.showTemporary(config.error);
                 return;
             }
 
@@ -66,7 +67,8 @@
             };
 
             if (typeof DocsAPI === "undefined") {
-                displayError(t(OCA.Onlyoffice.AppName, "ONLYOFFICE cannot be reached. Please contact admin"));
+                
+				OC.Notification.showTemporary(t(OCA.Onlyoffice.AppName, "ONLYOFFICE cannot be reached. Please contact admin"));
                 return;
             }
 
@@ -78,10 +80,6 @@
     OCA.Onlyoffice.InitEditor = function () {
 
         var iframe = $("#iframeEditor");
-
-        var displayError = function (error) {
-            iframe.text(error).addClass("error");
-        };
 
 
 		if (isPublicPage()) {
@@ -104,7 +102,8 @@
         } else {
             var fileId = iframe.data("id");
             if (!fileId) {
-                displayError(t(OCA.Onlyoffice.AppName, "FileId is empty"));
+                console.warn("FileId is empty")
+				// OC.Notification.showTemporary(t(OCA.Onlyoffice.AppName, "FileId is empty"));
                 return;
             }
     
