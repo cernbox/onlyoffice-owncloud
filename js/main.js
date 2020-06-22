@@ -307,7 +307,7 @@ $(document).ready(function() {
                         </ul>\
                     </div>\
                     <p style="margin-top: 9px; font-size: 0.85em; text-align: left; margin-left: 10px;">\
-                        <a href="https://cern.service-now.com/service-portal/article.do?n=KB0006643" style="color: #757575;" target="_blank">Access to MS Office Online is still possible (KB0006643)</a>\
+                        <a href="https://cern.service-now.com/service-portal?id=kb_article&n=KB0006643" style="color: #757575;" target="_blank">Access to MS Office Online is still possible (KB0006643)</a>\
                     </p>\
                 </div>');
 
