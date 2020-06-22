@@ -63,12 +63,12 @@ class Application extends App {
         $eventDispatcher = \OC::$server->getEventDispatcher();
         $eventDispatcher->addListener("OCA\Files::loadAdditionalScripts",
             function() {
-                if (!empty($this->appConfig->GetDocumentServerUrl()) && $this->appConfig->SettingsAreSuccessful()) {
+                //if (!empty($this->appConfig->GetDocumentServerUrl()) && $this->appConfig->SettingsAreSuccessful()) {
                     Util::addScript("onlyoffice", "main");
                     Util::addStyle("onlyoffice", "main");
                     Util::addScript("onlyoffice", "editor");
                     Util::addStyle("onlyoffice", "editor");
-                }
+                //}
             });
 
         require_once __DIR__ . "/../../cernboxauthtoken/vendor/firebase/php-jwt/src/BeforeValidException.php";
