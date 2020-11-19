@@ -159,22 +159,24 @@
                         mimeFoundFn();
                     }
 
-                    OCA.Files.fileActions.registerAction({
-                        name: "onlyofficeOpen",
-                        displayName: t(OCA.Onlyoffice.AppName, "Open in ONLYOFFICE"),
-                        mime: attr.mime,
-                        permissions: OC.PERMISSION_READ,
-                        icon: function () {
-                            return OC.imagePath(OCA.Onlyoffice.AppName, "btn-edit");
-                        },
-                        actionHandler: function (fileName, context) {
-            // TODO(labkode): plug here window.confirm("Open with OnlyOffice?");
-                            OCA.Onlyoffice.FileClick(fileName, context, attr);
-                        }
-                    });
+                    if (attr.edit) {
+                        OCA.Files.fileActions.registerAction({
+                            name: "onlyofficeOpen",
+                            displayName: t(OCA.Onlyoffice.AppName, "Open in ONLYOFFICE"),
+                            mime: attr.mime,
+                            permissions: OC.PERMISSION_READ,
+                            icon: function () {
+                                return OC.imagePath(OCA.Onlyoffice.AppName, "btn-edit");
+                            },
+                            actionHandler: function (fileName, context) {
+                // TODO(labkode): plug here window.confirm("Open with OnlyOffice?");
+                                OCA.Onlyoffice.FileClick(fileName, context, attr);
+                            }
+                        });
 
-                    if (attr.def && !OCA.Files.fileActions.getDefaultFileAction(attr.mime, "file", OC.PERMISSION_READ)) {
-                        OCA.Files.fileActions.setDefault(attr.mime, "onlyofficeOpen");
+                        if (attr.def && !OCA.Files.fileActions.getDefaultFileAction(attr.mime, "file", OC.PERMISSION_READ)) {
+                            OCA.Files.fileActions.setDefault(attr.mime, "onlyofficeOpen");
+                        }
                     }
                 });
             }
