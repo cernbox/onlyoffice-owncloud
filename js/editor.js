@@ -34,7 +34,6 @@
 
     function onSuccess(config) {
         if (config) {
-            console.log(config);
             if (config.error != null) {
                 
 				OC.Notification.showTemporary(config.error);
@@ -77,46 +76,74 @@
         }
     }
 
-    OCA.Onlyoffice.InitEditor = function () {
-
-        var iframe = $("#iframeEditor");
-
-
-		if (isPublicPage()) {
-
-            if ($('#officeEngine').val() === "onlyoffice") {
-
-                var filename = iframe.data("id") || "";
-                var token = getSharingToken();
-                var data = {};
-    
-                data['token'] = token;
-                data['folderurl'] = parent.location.protocol+'//'+location.host+OC.generateUrl('/s/')+token+'?closed=1&path='+OC.dirname(filename);
-                data['filename'] = filename
-    
-                $.post(OC.generateUrl('apps/onlyoffice/ajax/configpublic'), data)
-                    .success(onSuccess)
-                    .error(function(data) {console.log(data)});
-            }
-
-        } else {
-            var fileId = iframe.data("id");
-            if (!fileId) {
-                console.warn("FileId is empty")
-				// OC.Notification.showTemporary(t(OCA.Onlyoffice.AppName, "FileId is empty"));
-                return;
-            }
-    
-            $.ajax({
-                url: OC.generateUrl("apps/onlyoffice/ajax/config" + fileId),
-                error: function(data) {console.log(data);},
-                success: onSuccess
-            });
-
-        }
+    var getPublicLinkAccessToken = function() {
+        var data = $("data[key='cernboxauthtoken']");
+        return data.attr('x-access-token');
     };
 
-    $(document).ready(OCA.Onlyoffice.InitEditor);
+    var getUrlParameter = function(sParam) {
+        var urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(sParam)
+    };
+
+    OCA.Onlyoffice.InitEditor = function () {
+
+
+        var iframe = $("#iframeEditor");
+        var filename = iframe.data("id") || "";
+
+        if (!filename) {
+            // This should never happen... But...
+            console.warn("FileId is empty");
+            return;
+        }
+
+        var url;
+        var request;
+
+        if (typeof pl_token !== 'undefined' || isPublicPage()) {
+
+            var token;
+            var accessToken;
+            if (typeof pl_token !== 'undefined') {
+                token = pl_token;
+                accessToken = getUrlParameter('X-Access-Token');
+            } else {
+                token = getSharingToken();
+                accessToken = getPublicLinkAccessToken();
+                filename = ""; // Public link in single file review mode doesn't have filename, only ID
+            }
+
+            url = OC.generateUrl('apps/onlyoffice/ajax/configpublic');
+            request = {
+                method: 'POST',
+                headers: {
+                    'X-Access-Token': accessToken,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    'filename': filename,
+                    'token': token,
+                    'folderurl': parent.location.protocol + '//' + location.host + OC.generateUrl('/s/') + token + '?closed=1&path=' + OC.dirname(filename)
+                })
+            };
+
+        } else {
+            url = OC.generateUrl('apps/onlyoffice/ajax/config' + filename);
+            request = {
+                method: 'GET',
+                headers: {
+                    'X-Access-Token': OC["X-Access-Token"]
+                }
+            };
+        }
+        
+        // Use fetch instead of XMLHttpRequest to avoid having leftoverrs from OC...
+        fetch(url, request).then(response => response.json())
+        .then(onSuccess, function() {
+            $('#loader').html('Failed to load the file. Does it exist?');
+        });
+    };
 
     var isPublicPage = function () {
 
