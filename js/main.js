@@ -64,8 +64,8 @@
                 }
 
                 fileList.add(response, { animate: true });
-		var fn = dir +"/" + response.name;
-                OCA.Onlyoffice.OpenEditor(fn, winEditor);
+		        var fn = dir +"/" + response.name;
+                OCA.Onlyoffice.OpenEditor(fn, 31, winEditor); // the file was just created so use the max permissions 31
 
                 var row = OC.Notification.show(t(OCA.Onlyoffice.AppName, "File created"));
                 setTimeout(function () {
@@ -75,12 +75,42 @@
         );
     };
 
-    OCA.Onlyoffice.OpenEditor = function (fileId, winEditor) {
-        var template = '<div id="app"><div id="iframeEditor" data-id="{{id}}"></div></div>';
-	var _template = Handlebars.compile(template);
-	_template = _template({"id": fileId, "documentServerUrl": OCA.Onlyoffice.documentServer});
-       $('#content').html(_template);
-       OCA.Onlyoffice.InitEditor();
+    var isPublicPage = function() {
+
+        if ($("input#isPublic") && $("input#isPublic").val() === "1") {
+            return true;
+        } else {
+            return false;
+        }
+    };
+
+    var getSharingToken = function() {
+        if ($("input#sharingToken") && $("input#sharingToken").val()) {
+            return $("input#sharingToken").val();
+        } else {
+            return null;
+        }
+    };
+
+    var getPublicLinkAccessToken = function() {
+        var data = $("data[key='cernboxauthtoken']");
+        return data.attr('x-access-token');
+    };
+
+    OCA.Onlyoffice.OpenEditor = function (fileId, permissions, winEditor) {
+        var path = 'view';
+        if (permissions > 1) { // > 1 write permissions
+            path = 'edit';
+        }
+
+        if (isPublicPage()) {
+            var token = getSharingToken();
+            url = OC.generateUrl('/apps/onlyoffice/public/' + token + '/' + path + fileId + '?X-Access-Token=' + getPublicLinkAccessToken());
+        } else {
+            url = OC.generateUrl('/apps/onlyoffice/' + path + fileId);
+        }
+
+        window.open(url, '_blank');
 
 	// CERNBox, we load editor without refreshing the page
         //if (winEditor && winEditor.location) {
@@ -92,57 +122,65 @@
         //}
     };
 
+    OCA.Onlyoffice.loadEditor = function(fileId) {
+        var template = '<div id="app"><div id="iframeEditor" data-id="{{id}}"></div></div>';
+	    var _template = Handlebars.compile(template);
+	    _template = _template({"id": fileId, "documentServerUrl": OCA.Onlyoffice.documentServer});
+        $('#content').html(_template);
+        OCA.Onlyoffice.InitEditor();
+    }
+
     OCA.Onlyoffice.FileClick = function (fileName, context, attr) {
         var fileInfoModel = context.fileInfoModel || context.fileList.getModelForFile(fileName);
         var fileList = context.fileList;
         if (!attr.conv) {
-		console.log(fileInfoModel);
-            OCA.Onlyoffice.OpenEditor(fileInfoModel.get("path") + "/" + fileInfoModel.get("name"));
+            OCA.Onlyoffice.OpenEditor(fileInfoModel.get("path") + "/" + fileInfoModel.get("name"), fileInfoModel.get("permissions"));
             return;
         }
 
-        OC.dialogs.confirm(t(OCA.Onlyoffice.AppName, "The document file you open will be converted to the Office Open XML format for faster viewing and editing."),
-            t(OCA.Onlyoffice.AppName, "Convert and open document"),
-            function (convert) {
-                if (!convert) {
-                    return;
-                }
+        // We don't support conversion
+        // OC.dialogs.confirm(t(OCA.Onlyoffice.AppName, "The document file you open will be converted to the Office Open XML format for faster viewing and editing."),
+        //     t(OCA.Onlyoffice.AppName, "Convert and open document"),
+        //     function (convert) {
+        //         if (!convert) {
+        //             return;
+        //         }
 
-                $.post(OC.generateUrl("apps/" + OCA.Onlyoffice.AppName + "/ajax/convert"),
-                    {
-                        fileId: fileInfoModel.id
-                    },
-                    function onSuccess(response) {
-                        if (response.error) {
-                            var row = OC.Notification.show(response.error);
-                            setTimeout(function () {
-                                OC.Notification.hide(row);
-                            }, 3000);
-                            return;
-                        }
+        //         $.post(OC.generateUrl("apps/" + OCA.Onlyoffice.AppName + "/ajax/convert"),
+        //             {
+        //                 fileId: fileInfoModel.id
+        //             },
+        //             function onSuccess(response) {
+        //                 if (response.error) {
+        //                     var row = OC.Notification.show(response.error);
+        //                     setTimeout(function () {
+        //                         OC.Notification.hide(row);
+        //                     }, 3000);
+        //                     return;
+        //                 }
 
-                        if (response.parentId == fileList.dirInfo.id) {
-                            fileList.add(response, { animate: true });
-                        }
+        //                 if (response.parentId == fileList.dirInfo.id) {
+        //                     fileList.add(response, { animate: true });
+        //                 }
 
-                        var row = OC.Notification.show(t(OCA.Onlyoffice.AppName, "File created"));
-                        setTimeout(function () {
-                            OC.Notification.hide(row);
-                        }, 3000);
-                    })
-                    .fail(function(status) {
-                        if (status === 412) {
-                            OC.Notification.show(t('files', 'Could not create file "{file}" because it already exists',
-                                {file: name}), {type: 'error'}
-                            );
-                        } else {
-                            OC.Notification.show(t('files', 'Could not create file "{file}"',
-                                {file: name}), {type: 'error'}
-                            );
-                        }
-                        deferred.reject(status);
-                    });
-            });
+        //                 var row = OC.Notification.show(t(OCA.Onlyoffice.AppName, "File created"));
+        //                 setTimeout(function () {
+        //                     OC.Notification.hide(row);
+        //                 }, 3000);
+        //             })
+        //             .fail(function(status) {
+        //                 if (status === 412) {
+        //                     OC.Notification.show(t('files', 'Could not create file "{file}" because it already exists',
+        //                         {file: name}), {type: 'error'}
+        //                     );
+        //                 } else {
+        //                     OC.Notification.show(t('files', 'Could not create file "{file}"',
+        //                         {file: name}), {type: 'error'}
+        //                     );
+        //                 }
+        //                 deferred.reject(status);
+        //             });
+        //     });
     };
 
     OCA.Onlyoffice.RegisterFileList = function(mimePl, mimeFoundFn) {
@@ -229,7 +267,7 @@
     // return promise
     OCA.Onlyoffice.loadConfig = function() {
     	var url = OC.generateUrl('/apps/onlyoffice/config');
-	return $.get(url);
+	    return $.get(url);
     }
 
     OCA.Onlyoffice.loadOnlyOfficeAPI = function() {
@@ -239,15 +277,6 @@
 		script.src = OCA.Onlyoffice.documentServer+"web-apps/apps/api/documents/api.js";
 		document.head.appendChild(script);
     }
-
-    OCA.Onlyoffice.OpenSingleFileEditor = function (token) {
-        var template = '<div id="app"><div id="iframeEditor"></div></div>';
-        var _template = Handlebars.compile(template);
-        _template = _template({"documentServerUrl": OCA.Onlyoffice.documentServer});
-        $('#content').html(_template);
-        OCA.Onlyoffice.InitEditor();
-    };
-
 
 })(OCA);
 
@@ -260,7 +289,18 @@ $(document).ready(function() {
     };
 
 
-    if ($('#isPublic').val()) {
+    if (typeof open_file !== 'undefined') {
+
+        if (this_app === "onlyoffice") {
+            // This is the new tab
+            OCA.Onlyoffice.loadConfig().success(function (response) {
+                OCA.Onlyoffice.documentServer = response.document_server;
+                OCA.Onlyoffice.loadOnlyOfficeAPI();
+                OCA.Onlyoffice.loadEditor(open_file);
+            }); 
+        }
+
+    } else if ($('#isPublic').val()) {
 
         // !! Only use OnlyOffice in public links !! 
             
@@ -273,7 +313,7 @@ $(document).ready(function() {
                 mime = $('#mimetype').val();
 
                 OCA.Onlyoffice.RegisterFileList(mime, function() {
-                    OCA.Onlyoffice.OpenSingleFileEditor(sharingToken);
+                    OCA.Onlyoffice.loadEditor(sharingToken);
                 });
             } else {
                 OCA.Onlyoffice.RegisterFileList();

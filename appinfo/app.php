@@ -35,7 +35,7 @@ App::registerAdmin("onlyoffice", "settings");
 
 $app = new Application();
 
-$domains = \OC::$server->getConfig()->getSystemValue("drawio.domains", ["cbox-wopi-01.cern.ch:9443", "cbox-wopi.cern.ch:9433"]);
+$domains = \OC::$server->getConfig()->getSystemValue("drawio.domains", ["cbox-wopi-01.cern.ch:9443", "cbox-wopi.cern.ch:9433", "https://qa.cernbox.cern.ch", "https://cernbox.cern.ch"]);
 $policy = new \OCP\AppFramework\Http\EmptyContentSecurityPolicy();
 foreach($domains as $domain) {
 	$policy->addAllowedScriptDomain($domain);
@@ -43,3 +43,8 @@ foreach($domains as $domain) {
 	$policy->addAllowedConnectDomain($domain);
 }
 \OC::$server->getContentSecurityPolicyManager()->addDefaultPolicy($policy);
+
+\OCP\Util::addScript('onlyoffice', 'main');
+\OCP\Util::addScript('onlyoffice', 'editor');
+\OCP\Util::addStyle('onlyoffice', 'main');
+\OCP\Util::addStyle('onlyoffice', 'editor');

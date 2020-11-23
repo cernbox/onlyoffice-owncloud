@@ -26,14 +26,10 @@
 
 return [
     "routes" => [
-       ["name" => "callback#download", "url" => "/download", "verb" => "GET"],
-       ["name" => "callback#emptyfile", "url" => "/empty", "verb" => "GET"],
-       ["name" => "callback#track", "url" => "/track", "verb" => "POST"],
-       ["name" => "editor#index", "url" => "/load/{fileId}", "verb" => "GET"],
-       ["name" => "editor#config", "url" => "/ajax/config/{fileId}", "verb" => "GET"],
-       ["name" => "editor#create", "url" => "/ajax/new", "verb" => "POST"],
-       ["name" => "editor#convert", "url" => "/ajax/convert", "verb" => "POST"],
-       ["name" => "settings#save_settings", "url" => "/ajax/settings", "verb" => "PUT"],
-       ["name" => "settings#get_settings", "url" => "/ajax/settings", "verb" => "GET"],
+       ['name' => 'editor#view', 'url' => '/view{file}', 'verb' => 'GET', 'requirements' => ['file' => '.+']],
+       ['name' => 'editor#edit', 'url' => '/edit{file}', 'verb' => 'GET', 'requirements' => ['file' => '.+']],
+       ['name' => 'editor#viewpl', 'url' => '/public/{token}/view{file}', 'verb' => 'GET', 'requirements' => ['file' => '.+']],
+       ['name' => 'editor#editpl', 'url' => '/public/{token}/edit{file}', 'verb' => 'GET', 'requirements' => ['file' => '.+']],
+
     ]
 ];
