@@ -32,3 +32,12 @@
 .icon-onlyoffice-new-pptx {
     background-image: url("../img/new-pptx.svg");
 }
+
+#loader {
+    text-align: center;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 2em;
+    color: #4f4f4f;
+}

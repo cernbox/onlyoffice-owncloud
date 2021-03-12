@@ -81,11 +81,6 @@
         return data.attr('x-access-token');
     };
 
-    var getUrlParameter = function(sParam) {
-        var urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(sParam)
-    };
-
     OCA.Onlyoffice.InitEditor = function () {
 
 
@@ -107,7 +102,16 @@
             var accessToken;
             if (typeof pl_token !== 'undefined') {
                 token = pl_token;
-                accessToken = getUrlParameter('X-Access-Token');
+                accessToken = x_access_token;
+
+                if (accessToken == null) {
+                    $('#content').html('<div id="loader">This page should be opened from its public link. Redirecting...</div>');
+                    var redirect_user = function() {
+                        window.location.href = OC.generateUrl('/s/') + pl_token + '?path=' + OC.dirname(filename)
+                    }
+                    setTimeout(redirect_user, 700);
+                    return;
+                }
             } else {
                 token = getSharingToken();
                 accessToken = getPublicLinkAccessToken();
@@ -124,7 +128,7 @@
                 body: new URLSearchParams({
                     'filename': filename,
                     'token': token,
-                    'folderurl': parent.location.protocol + '//' + location.host + OC.generateUrl('/s/') + token + '?closed=1&path=' + OC.dirname(filename)
+                    'folderurl': parent.location.protocol + '//' + location.host + OC.generateUrl('/s/') + token + '?zpath=' + OC.dirname(filename)
                 })
             };
 
@@ -141,7 +145,7 @@
         // Use fetch instead of XMLHttpRequest to avoid having leftoverrs from OC...
         fetch(url, request).then(response => response.json())
         .then(onSuccess, function() {
-            $('#loader').html('Failed to load the file. Does it exist?');
+            $('#content').html('<div id="loader">Failed to load the file. Does it exist?</div>');
         });
     };
 
