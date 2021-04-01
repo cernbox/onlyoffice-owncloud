@@ -323,7 +323,7 @@ $(document).ready(function() {
     } else if (!$('#body-login').length) { // don't show office in the login page (including public links with password)
     
         OCA.Onlyoffice.RegisterFileList()
-        OC.Plugins.register("OCA.Files.NewFileMenu", OCA.Onlyoffice.NewFileMenu); // Create files by default using OO
+        // OC.Plugins.register("OCA.Files.NewFileMenu", OCA.Onlyoffice.NewFileMenu); // Create files by default using OO
         OCA.Onlyoffice.loadConfig().success(function (response) {
             OCA.Onlyoffice.documentServer = response.document_server;
             OCA.Onlyoffice.loadOnlyOfficeAPI();
